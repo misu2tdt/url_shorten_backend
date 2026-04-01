@@ -1,5 +1,6 @@
 // src/urls/urls.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
 
 @Injectable()
 export class UrlsService {
@@ -33,5 +34,15 @@ export class UrlsService {
       shortCode: shortCode,
       shortUrl: `http://localhost:3000/${shortCode}`
     };
+  }
+  getOriginalUrl(shortCode: string): string {
+    const originalUrl = this.urlDatabase.get(shortCode);
+    
+    // Nếu mã không tồn tại trong Map, quăng lỗi 404 Not Found
+    if (!originalUrl) {
+      throw new NotFoundException('Không tìm thấy đường dẫn này!');
+    }
+    
+    return originalUrl;
   }
 }
