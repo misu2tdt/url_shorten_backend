@@ -16,9 +16,15 @@ export class UrlsController {
   }
 
   @Get(':shortCode') 
-  redirectUrl(@Param('shortCode') shortCode: string, @Res() res: Response) {
-    const originalUrl = this.urlsService.getOriginalUrl(shortCode);
+  // 1. Phải có chữ async ở trước tên hàm
+  async redirectUrl(@Param('shortCode') shortCode: string, @Res() res: Response) {
+    
+    // 2. Phải có chữ await ở đây để "đứng đợi" ông Service xuống DB lấy link lên
+    const originalUrl = await this.urlsService.getOriginalUrl(shortCode);
+    
+    // 3. Lúc này originalUrl đã là cái link thật, đưa cho redirect là chạy mượt mà
     return res.redirect(302, originalUrl);
+  
   }
 
 }
