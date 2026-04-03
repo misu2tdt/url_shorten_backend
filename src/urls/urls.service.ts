@@ -1,48 +1,55 @@
-// src/urls/urls.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Url } from './entities/url.entity';
 
 @Injectable()
 export class UrlsService {
-  
-  // Mô phỏng Database tạm thời lưu trên RAM
-  private urlDatabase = new Map<string, string>();
+  // 1. Tiêm công cụ tương tác Database (Repository) vào Service
+  constructor(
+    @InjectRepository(Url)
+    private urlRepository: Repository<Url>,
+  ) {}
 
-  // Hàm tạo mã 6 ký tự (Em giữ nguyên đoạn code nãy em gõ)
   private generateShortCode(): string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < 6; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      result += characters.charAt(randomIndex);
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
   }
 
-  // Hàm xử lý chính được Controller gọi
-  shortenUrl(originalUrl: string) {
-    // 1. Tạo ra mã ngắn
-    const shortCode = this.generateShortCode();
-    
-    // 2. Lưu vào Database (tạm thời lưu vào Map)
-    // Ví dụ: key là 'aB3x9Z', value là 'https://google.com'
-    this.urlDatabase.set(shortCode, originalUrl);
+  // 2. Chuyển thành hàm async (bất đồng bộ) vì giao tiếp DB tốn thời gian
+  async shortenUrl(originalUrl: string) {
+    let shortCode = this.generateShortCode();
 
-    // 3. Trả kết quả về cho Controller
-    return {
+    // 3. Tạo một bản ghi mới bằng TypeORM
+    const newUrl = this.urlRepository.create({
       originalUrl: originalUrl,
       shortCode: shortCode,
-      shortUrl: `http://localhost:3000/${shortCode}`
+    });
+
+    // 4. Lưu vào Database thật
+    await this.urlRepository.save(newUrl);
+
+    return {
+      originalUrl,
+      shortCode,
+      shortUrl: `http://localhost:3000/urls/${shortCode}`,
     };
   }
-  getOriginalUrl(shortCode: string): string {
-    const originalUrl = this.urlDatabase.get(shortCode);
-    
-    // Nếu mã không tồn tại trong Map, quăng lỗi 404 Not Found
-    if (!originalUrl) {
+
+  // 5. Hàm tìm kiếm cũng phải đợi DB trả kết quả (async/await)
+  async getOriginalUrl(shortCode: string): Promise<string> {
+    const urlRecord = await this.urlRepository.findOne({
+      where: { shortCode: shortCode },
+    });
+
+    if (!urlRecord) {
       throw new NotFoundException('Không tìm thấy đường dẫn này!');
     }
-    
-    return originalUrl;
+
+    return urlRecord.originalUrl; // Trả về link gốc nằm trong bản ghi DB
   }
 }
