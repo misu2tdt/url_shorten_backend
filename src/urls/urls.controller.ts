@@ -1,30 +1,75 @@
-// src/urls/urls.controller.ts
-import { Controller, Post, Body, Get, Param, Res } from '@nestjs/common';
-import type { Response } from 'express'; 
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  Res,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import type { Request, Response } from 'express';
 import { UrlsService } from './urls.service';
 import { ShortenUrlDto } from './dto/shorten-url.dto';
+import { UpdateUrlDto } from './dto/update-url.dto';
 
-@Controller('urls') 
+@Controller('urls')
 export class UrlsController {
-  
-  // (2) Dependency Injection (Tiêm phụ thuộc)
   constructor(private readonly urlsService: UrlsService) {}
 
-  @Post('shorten') 
-  shorten(@Body() body: ShortenUrlDto) { 
-    return this.urlsService.shortenUrl(body.originalUrl);
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @Post('shorten')
+  shorten(@Body() dto: ShortenUrlDto) {
+    return this.urlsService.shortenUrl(dto);
   }
 
-  @Get(':shortCode') 
-  // 1. Phải có chữ async ở trước tên hàm
-  async redirectUrl(@Param('shortCode') shortCode: string, @Res() res: Response) {
-    
-    // 2. Phải có chữ await ở đây để "đứng đợi" ông Service xuống DB lấy link lên
-    const originalUrl = await this.urlsService.getOriginalUrl(shortCode);
-    
-    // 3. Lúc này originalUrl đã là cái link thật, đưa cho redirect là chạy mượt mà
+  @Get()
+  getAllUrls(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.urlsService.getAllUrls(page, limit);
+  }
+
+  @Throttle({ default: { ttl: 60000, limit: 200 } })
+  @Get(':shortCode')
+  async redirect(
+    @Param('shortCode') shortCode: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const trackingData = {
+      ip:
+        (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+        req.ip ||
+        undefined,
+      userAgent: req.headers['user-agent'] || undefined,
+      referrer: req.headers['referer'] as string | undefined,
+    };
+
+    const originalUrl = await this.urlsService.getOriginalUrl(
+      shortCode,
+      trackingData,
+    );
+
     return res.redirect(302, originalUrl);
-  
   }
 
+  @Patch(':shortCode')
+  updateUrl(
+    @Param('shortCode') shortCode: string,
+    @Body() dto: UpdateUrlDto,
+  ) {
+    return this.urlsService.updateUrl(shortCode, dto);
+  }
+
+  @Delete(':shortCode')
+  deleteUrl(@Param('shortCode') shortCode: string) {
+    return this.urlsService.deleteUrl(shortCode);
+  }
 }

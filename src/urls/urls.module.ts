@@ -1,13 +1,21 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { UrlsService } from './urls.service';
 import { UrlsController } from './urls.controller';
-import { TypeOrmModule } from '@nestjs/typeorm'; 
-import { Url } from './entities/url.entity'; // Import Entity
+import { Url } from './entities/url.entity';
+import { Click } from './entities/click.entity';
 
 @Module({
-  // Cấp quyền cho module này xài bảng Url
-  imports: [TypeOrmModule.forFeature([Url])], 
+  imports: [TypeOrmModule.forFeature([Url, Click])],
   controllers: [UrlsController],
-  providers: [UrlsService],
+  providers: [
+    UrlsService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class UrlsModule {}
