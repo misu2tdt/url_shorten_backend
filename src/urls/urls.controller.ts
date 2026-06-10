@@ -36,6 +36,11 @@ export class UrlsController {
     return this.urlsService.getAllUrls(page, limit);
   }
 
+  @Get(':shortCode/stats')
+  getUrlStats(@Param('shortCode') shortCode: string) {
+    return this.urlsService.getUrlStats(shortCode);
+  }
+
   @Throttle({ default: { ttl: 60000, limit: 200 } })
   @Get(':shortCode')
   async redirect(
