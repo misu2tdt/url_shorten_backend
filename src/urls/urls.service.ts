@@ -232,4 +232,98 @@ export class UrlsService {
     }
     throw new ConflictException('Không thể tạo mã. Vui lòng thử lại.');
   }
+
+  async getUrlStats(shortCode: string) {
+    const urlRecord = await this.urlRepository.findOne({
+      where: { shortCode },
+    });
+
+    if (!urlRecord || !urlRecord.isActive) {
+      throw new NotFoundException('Không tìm thấy đường dẫn này!');
+    }
+
+    const [clicksPerDay, topReferrers, deviceBreakdown] = await Promise.all([
+      this.getClicksPerDay(urlRecord.id),
+      this.getTopReferrers(urlRecord.id),
+      this.getDeviceBreakdown(urlRecord.id),
+    ]);
+
+    return {
+      shortCode: urlRecord.shortCode,
+      originalUrl: urlRecord.originalUrl,
+      totalClicks: urlRecord.clickCount,
+      isActive: urlRecord.isActive,
+      expiresAt: urlRecord.expiresAt,
+      createdAt: urlRecord.createdAt,
+      analytics: {
+        clicksPerDay,
+        topReferrers,
+        deviceBreakdown,
+      },
+    };
+  }
+
+  private async getClicksPerDay(urlId: number) {
+    const result = await this.clickRepository
+      .createQueryBuilder('click')
+      .select("TO_CHAR(click.clickedAt, 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('click.url_id = :urlId', { urlId })
+      .andWhere('click.clickedAt >= NOW() - INTERVAL \'7 days\'')
+      .groupBy('date')
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    return result.map((row) => ({
+      date: row.date,
+      count: parseInt(row.count, 10),
+    }));
+  }
+
+  private async getTopReferrers(urlId: number) {
+    const result = await this.clickRepository
+      .createQueryBuilder('click')
+      .select(
+        "COALESCE(click.referrer, 'Direct')",
+        'referrer',
+      )
+      .addSelect('COUNT(*)', 'count')
+      .where('click.url_id = :urlId', { urlId })
+      .groupBy('referrer')
+      .orderBy('count', 'DESC')
+      .limit(5)
+      .getRawMany();
+
+    return result.map((row) => ({
+      referrer: row.referrer,
+      count: parseInt(row.count, 10),
+    }));
+  }
+
+  private async getDeviceBreakdown(urlId: number) {
+    const result = await this.clickRepository
+      .createQueryBuilder('click')
+      .select(
+        `CASE
+          WHEN click.userAgent ILIKE '%mobile%' OR click.userAgent ILIKE '%android%' OR click.userAgent ILIKE '%iphone%'
+          THEN 'mobile'
+          WHEN click.userAgent ILIKE '%bot%' OR click.userAgent ILIKE '%crawler%' OR click.userAgent ILIKE '%spider%'
+          THEN 'bot'
+          WHEN click.userAgent IS NULL
+          THEN 'unknown'
+          ELSE 'desktop'
+        END`,
+        'device',
+      )
+      .addSelect('COUNT(*)', 'count')
+      .where('click.url_id = :urlId', { urlId })
+      .groupBy('device')
+      .orderBy('count', 'DESC')
+      .getRawMany();
+
+    return result.map((row) => ({
+      device: row.device,
+      count: parseInt(row.count, 10),
+    }));
+  }
 }
