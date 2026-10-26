@@ -153,7 +153,7 @@ describe('URLs API (e2e, real PostgreSQL)', () => {
       expect(body).toEqual({
         statusCode: 400,
         error: 'Bad Request',
-        message: ['Phải là URL hợp lệ (vd: https://google.com)'],
+        message: ['Must be a valid URL (e.g. https://google.com)'],
         timestamp: expect.any(String) as string,
       });
       expect(await urls().count()).toBe(0);
@@ -272,7 +272,7 @@ describe('URLs API (e2e, real PostgreSQL)', () => {
       expect(res.body).toEqual({
         statusCode: 404,
         error: 'Not Found',
-        message: 'Không tìm thấy đường dẫn này!',
+        message: 'Link not found',
         timestamp: expect.any(String) as string,
       });
     });
@@ -453,7 +453,7 @@ describe('URLs API (e2e, real PostgreSQL)', () => {
       const res = await api().delete(`/urls/${url.shortCode}`).expect(200);
 
       expect(res.body).toEqual({
-        message: `Link /${url.shortCode} đã được xóa.`,
+        message: `Link /${url.shortCode} was deleted`,
       });
       await api().get(`/urls/${url.shortCode}`).expect(404);
       const row = await urls().findOneByOrFail({ id: url.id });

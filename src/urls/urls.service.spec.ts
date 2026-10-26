@@ -466,7 +466,7 @@ describe('UrlsService', () => {
       expect(record.isActive).toBe(false);
       expect(urlRepo.save).toHaveBeenCalledWith(record);
       expect(cache.del).toHaveBeenCalledWith('url:abc12345');
-      expect(result).toEqual({ message: 'Link /abc12345 đã được xóa.' });
+      expect(result).toEqual({ message: 'Link /abc12345 was deleted' });
     });
 
     it('unknown code: 404 and nothing is saved or evicted', async () => {
