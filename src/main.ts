@@ -20,7 +20,9 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('URL Shortener API')
-    .setDescription('A production-grade URL shortener with analytics, caching, and rate limiting')
+    .setDescription(
+      'A production-grade URL shortener with analytics, caching, and rate limiting',
+    )
     .setVersion('1.0')
     .build();
 
