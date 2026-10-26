@@ -56,7 +56,7 @@ export class UrlsService {
       });
       if (existing) {
         throw new ConflictException(
-          `Alias "${dto.customAlias}" đã được sử dụng.`,
+          `Alias "${dto.customAlias}" is already in use`,
         );
       }
       shortCode = dto.customAlias;
@@ -117,12 +117,12 @@ export class UrlsService {
     });
 
     if (!urlRecord || !urlRecord.isActive) {
-      throw new NotFoundException('Không tìm thấy đường dẫn này!');
+      throw new NotFoundException('Link not found');
     }
 
     if (urlRecord.expiresAt && urlRecord.expiresAt < new Date()) {
       await this.cacheManager.del(cacheKey);
-      throw new GoneException('Đường dẫn này đã hết hạn!');
+      throw new GoneException('This link has expired');
     }
 
     await this.cacheManager.set(
@@ -147,14 +147,14 @@ export class UrlsService {
     });
 
     if (!urlRecord) {
-      throw new NotFoundException('Không tìm thấy đường dẫn này!');
+      throw new NotFoundException('Link not found');
     }
 
     urlRecord.isActive = false;
     await this.urlRepository.save(urlRecord);
     await this.cacheManager.del(`${this.CACHE_PREFIX}${shortCode}`);
 
-    return { message: `Link /${shortCode} đã được xóa.` };
+    return { message: `Link /${shortCode} was deleted` };
   }
 
   async updateUrl(
@@ -166,7 +166,7 @@ export class UrlsService {
     });
 
     if (!urlRecord || !urlRecord.isActive) {
-      throw new NotFoundException('Không tìm thấy đường dẫn này!');
+      throw new NotFoundException('Link not found');
     }
 
     if (updateData.originalUrl) {
@@ -251,7 +251,7 @@ export class UrlsService {
       });
       if (!existing) return code;
     }
-    throw new ConflictException('Không thể tạo mã. Vui lòng thử lại.');
+    throw new ConflictException('Could not generate a code. Please try again.');
   }
 
   async getUrlStats(shortCode: string) {
@@ -260,7 +260,7 @@ export class UrlsService {
     });
 
     if (!urlRecord || !urlRecord.isActive) {
-      throw new NotFoundException('Không tìm thấy đường dẫn này!');
+      throw new NotFoundException('Link not found');
     }
 
     const [clicksPerDay, topReferrers, deviceBreakdown] = await Promise.all([

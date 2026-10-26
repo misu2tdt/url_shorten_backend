@@ -57,14 +57,14 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('formats the exceptions the service throws (Nest exception with a message)', () => {
-    run(new NotFoundException('Không tìm thấy đường dẫn này!'));
+    run(new NotFoundException('Link not found'));
 
     expect(status).toHaveBeenCalledWith(404);
     expect(json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: 404,
         error: 'Not Found',
-        message: 'Không tìm thấy đường dẫn này!',
+        message: 'Link not found',
       }),
     );
   });

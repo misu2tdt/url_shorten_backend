@@ -60,7 +60,7 @@ describe('configureApp', () => {
       await expect(failure).rejects.toMatchObject({
         response: {
           statusCode: 400,
-          message: ['Phải là URL hợp lệ (vd: https://google.com)'],
+          message: ['Must be a valid URL (e.g. https://google.com)'],
         },
       });
     });

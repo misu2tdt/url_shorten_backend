@@ -21,6 +21,7 @@
 - Every bug fix needs a test that fails before the fix and passes after.
 - Report evidence: paste real command output instead of saying "should work".
 - If you notice problems outside the current task, list them at the end; do not fix them.
+- All code, comments, log and error messages, API responses, tests, docs and commit messages are in English. Chat with the owner may be in Vietnamese.
 
 ## Code map
 - All business logic: `src/urls/urls.service.ts`. Cache keys: `url:<shortCode>`.
