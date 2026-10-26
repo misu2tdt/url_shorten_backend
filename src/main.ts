@@ -1,22 +1,13 @@
-import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+import { configureApp } from './configure-app';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-    }),
-  );
-
-  app.useGlobalFilters(new GlobalExceptionFilter());
-  app.enableCors();
+  configureApp(app);
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('URL Shortener API')

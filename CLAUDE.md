@@ -7,6 +7,11 @@
 - Build: `npm run build`
 - Test: `npx jest` / coverage: `npx jest --coverage`
   (use npx; PowerShell swallows flags passed as `npm test -- --flag`)
+- E2E (real Postgres, specs in `test/`): `docker compose up -d`, then once
+  `docker exec url_shortener_pg psql -U postgres -c "CREATE DATABASE url_shortener_test"`,
+  then `npm run test:e2e`. DB name must end with `_test` (default; guard refuses others).
+  E2E TRUNCATEs `urls`/`clicks` in that DB only. Shared app setup: `src/configure-app.ts`.
+- Known bugs are `it.todo` in `src/known-bugs.spec.ts`; turn one into a real test when fixing it.
 
 ## Rules
 - One task per branch. Keep diffs small. Never commit or push: the owner reviews and commits.
