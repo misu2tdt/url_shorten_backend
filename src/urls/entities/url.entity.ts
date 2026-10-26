@@ -21,8 +21,8 @@ export class Url {
 
   @Index()
   @Column({ length: 20, unique: true })
-  shortCode!: string;   
-  
+  shortCode!: string;
+
   @Column({ type: 'varchar', length: 50, nullable: true })
   customAlias!: string | null;
 

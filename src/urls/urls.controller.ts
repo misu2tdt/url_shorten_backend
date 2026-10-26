@@ -70,7 +70,7 @@ export class UrlsController {
         req.ip ||
         undefined,
       userAgent: req.headers['user-agent'] || undefined,
-      referrer: req.headers['referer'] as string | undefined,
+      referrer: req.headers['referer'],
     };
 
     const originalUrl = await this.urlsService.getOriginalUrl(
@@ -85,10 +85,7 @@ export class UrlsController {
   @ApiResponse({ status: 200, description: 'URL updated successfully' })
   @ApiResponse({ status: 404, description: 'URL not found' })
   @Patch(':shortCode')
-  updateUrl(
-    @Param('shortCode') shortCode: string,
-    @Body() dto: UpdateUrlDto,
-  ) {
+  updateUrl(@Param('shortCode') shortCode: string, @Body() dto: UpdateUrlDto) {
     return this.urlsService.updateUrl(shortCode, dto);
   }
 

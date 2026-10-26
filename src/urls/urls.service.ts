@@ -15,6 +15,21 @@ import { Click } from './entities/click.entity';
 import { ShortenUrlDto } from './dto/shorten-url.dto';
 import { nanoid } from 'nanoid';
 
+interface ClicksPerDayRow {
+  date: string;
+  count: string;
+}
+
+interface TopReferrerRow {
+  referrer: string;
+  count: string;
+}
+
+interface DeviceBreakdownRow {
+  device: string;
+  count: string;
+}
+
 @Injectable()
 export class UrlsService {
   private readonly CACHE_PREFIX = 'url:';
@@ -88,8 +103,11 @@ export class UrlsService {
     const cachedUrl = await this.cacheManager.get<string>(cacheKey);
 
     if (cachedUrl) {
-      this.trackClick(shortCode, trackingData).catch((err) =>
-        console.error('Track click failed:', err.message),
+      this.trackClick(shortCode, trackingData).catch((err: unknown) =>
+        console.error(
+          'Track click failed:',
+          err instanceof Error ? err.message : String(err),
+        ),
       );
       return cachedUrl;
     }
@@ -113,8 +131,11 @@ export class UrlsService {
       this.getCacheTTL(urlRecord.expiresAt),
     );
 
-    this.trackClick(shortCode, trackingData).catch((err) =>
-      console.error('Track click failed:', err.message),
+    this.trackClick(shortCode, trackingData).catch((err: unknown) =>
+      console.error(
+        'Track click failed:',
+        err instanceof Error ? err.message : String(err),
+      ),
     );
 
     return urlRecord.originalUrl;
@@ -269,10 +290,10 @@ export class UrlsService {
       .select("TO_CHAR(click.clickedAt, 'YYYY-MM-DD')", 'date')
       .addSelect('COUNT(*)', 'count')
       .where('click.url_id = :urlId', { urlId })
-      .andWhere('click.clickedAt >= NOW() - INTERVAL \'7 days\'')
+      .andWhere("click.clickedAt >= NOW() - INTERVAL '7 days'")
       .groupBy('date')
       .orderBy('date', 'ASC')
-      .getRawMany();
+      .getRawMany<ClicksPerDayRow>();
 
     return result.map((row) => ({
       date: row.date,
@@ -283,16 +304,13 @@ export class UrlsService {
   private async getTopReferrers(urlId: number) {
     const result = await this.clickRepository
       .createQueryBuilder('click')
-      .select(
-        "COALESCE(click.referrer, 'Direct')",
-        'referrer',
-      )
+      .select("COALESCE(click.referrer, 'Direct')", 'referrer')
       .addSelect('COUNT(*)', 'count')
       .where('click.url_id = :urlId', { urlId })
       .groupBy('referrer')
       .orderBy('count', 'DESC')
       .limit(5)
-      .getRawMany();
+      .getRawMany<TopReferrerRow>();
 
     return result.map((row) => ({
       referrer: row.referrer,
@@ -319,7 +337,7 @@ export class UrlsService {
       .where('click.url_id = :urlId', { urlId })
       .groupBy('device')
       .orderBy('count', 'DESC')
-      .getRawMany();
+      .getRawMany<DeviceBreakdownRow>();
 
     return result.map((row) => ({
       device: row.device,
