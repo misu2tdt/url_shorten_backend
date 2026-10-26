@@ -41,7 +41,7 @@ export class Url {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  // ============ QUAN HỆ ============
+  // ============ RELATIONS ============
 
   @OneToMany(() => Click, (click) => click.url)
   clicks!: Click[];

@@ -3,11 +3,11 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
-# npm ci thay vì npm install:
+# npm ci instead of npm install:
 #   ci = "clean install"
-#   → Xóa node_modules cũ, cài đúng versions trong package-lock.json
-#   → Đảm bảo mọi môi trường (dev, CI, production) dùng CÙNG versions
-#   → Nhanh hơn npm install vì skip resolution step
+#   → Removes the old node_modules, installs the exact versions in package-lock.json
+#   → Ensures every environment (dev, CI, production) uses the SAME versions
+#   → Faster than npm install because it skips the resolution step
 COPY . .
 RUN npm run build
 

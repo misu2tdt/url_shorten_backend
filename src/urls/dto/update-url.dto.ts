@@ -2,7 +2,7 @@ import { IsUrl, IsOptional, IsInt, Min, Max } from 'class-validator';
 
 export class UpdateUrlDto {
   @IsOptional()
-  @IsUrl({}, { message: 'Phải là URL hợp lệ' })
+  @IsUrl({}, { message: 'Must be a valid URL' })
   originalUrl?: string;
 
   @IsOptional()

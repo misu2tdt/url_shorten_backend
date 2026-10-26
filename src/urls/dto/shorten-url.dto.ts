@@ -17,8 +17,8 @@ export class ShortenUrlDto {
     example: 'https://google.com',
     description: 'The original URL to shorten',
   })
-  @IsNotEmpty({ message: 'URL không được để trống' })
-  @IsUrl({}, { message: 'Phải là URL hợp lệ (vd: https://google.com)' })
+  @IsNotEmpty({ message: 'URL must not be empty' })
+  @IsUrl({}, { message: 'Must be a valid URL (e.g. https://google.com)' })
   originalUrl!: string;
 
   @ApiPropertyOptional({
@@ -27,10 +27,10 @@ export class ShortenUrlDto {
   })
   @IsOptional()
   @IsString()
-  @MinLength(3, { message: 'Alias tối thiểu 3 ký tự' })
-  @MaxLength(30, { message: 'Alias tối đa 30 ký tự' })
+  @MinLength(3, { message: 'Alias must be at least 3 characters' })
+  @MaxLength(30, { message: 'Alias must be at most 30 characters' })
   @Matches(/^[a-zA-Z0-9-]+$/, {
-    message: 'Alias chỉ chứa chữ cái, số, và dấu gạch ngang',
+    message: 'Alias may only contain letters, numbers, and hyphens',
   })
   customAlias?: string;
 
@@ -39,8 +39,8 @@ export class ShortenUrlDto {
     description: 'Expiration time in minutes (1 - 525600)',
   })
   @IsOptional()
-  @IsInt({ message: 'expiresIn phải là số nguyên (phút)' })
-  @Min(1, { message: 'Tối thiểu 1 phút' })
-  @Max(525600, { message: 'Tối đa 365 ngày' })
+  @IsInt({ message: 'expiresIn must be an integer (minutes)' })
+  @Min(1, { message: 'Must be at least 1 minute' })
+  @Max(525600, { message: 'Must be at most 365 days' })
   expiresIn?: number;
 }
